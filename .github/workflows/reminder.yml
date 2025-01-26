@@ -1,0 +1,15 @@
+name: send-reminder
+run-name: Send NFTY reminder
+on:
+  workflow_dispatch:
+  schedule: # Run the action on a cron schedule
+    - cron: '7 13 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    - name: CURL request
+      run: |
+        curl -d "Review your highlights. Your past self thought they were important." \
+          -H "Click: obsidian://advanced-uri?vault=main&commandid=obsidian-spaced-repetition:srs-review-flashcards" \
+          $${{ secrets.NFTY_URL }}
