@@ -13,4 +13,4 @@ jobs:
       run: |
         curl -d "Review your highlights. Your past self thought they were important." \
           -H "Click: obsidian://advanced-uri?vault=main&commandid=obsidian-spaced-repetition:srs-review-flashcards" \
-          $${{ secrets.NFTY_URL }}
+          ${{ secrets.NFTY_URL }}
