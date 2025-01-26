@@ -11,3 +11,5 @@ sqlite3 $(awk '/mrbooks.db$/ {print FNR".tag"}' _names.list)
 ```
 
 You'll notice the db has several tables and highlights are in `notes`.
+
+Someday I might code up a pretty UI, but for now (`main.py`) I'm just dumping the highlights into a note in Obsidian. With the [spaced repetition plugin](https://www.stephenmwangi.com/obsidian-spaced-repetition/) and [ntfy](https://ntfy.sh/) + [adv uri plugin](https://vinzent03.github.io/obsidian-advanced-uri/) for daily notifications gets most of the experience I want:
