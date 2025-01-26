@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    steps:
     - name: CURL request
       run: |
         curl -d "Review your highlights. Your past self thought they were important." \
