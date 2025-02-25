@@ -1,8 +1,11 @@
 # Custom
+.env
+*.sh
+*.db
+*.out
 test-backups/
 com.flyersoft.moonreader/
 com.flyersoft.moonreaderp/
-run.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

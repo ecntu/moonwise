@@ -1,0 +1,21 @@
+<!-- templates/review.html -->
+{% extends "base.html" %}
+{% from "_highlight_card.html" import highlight_card %}
+
+{% block title %}Daily Review{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold mb-6">Today's Review</h1>
+    
+    {% if highlights %}
+        {% for highlight in highlights %}
+            {{ highlight_card(highlight, show_all_actions=True) }}
+        {% endfor %}
+    {% else %}
+        <div class="bg-white p-6 rounded-lg shadow text-center">
+            <p class="text-gray-600">No highlights to review today!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

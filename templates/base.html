@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Highlight Review{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: Georgia, serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow mb-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-center items-center h-16"> <div class="flex space-x-4">
+                    <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-gray-900">Home</a>
+                    <a href="{{ url_for('review') }}" class="text-gray-700 hover:text-gray-900">Review</a>
+                    <a href="{{ url_for('stats') }}" class="text-gray-700 hover:text-gray-900">Stats</a>
+                </div>
+                <div class="ml-4"> {% if g.logged_in %}
+                        <a href="{{ url_for('logout') }}" class="text-gray-700 hover:text-gray-900">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="text-gray-700 hover:text-gray-900">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-8 mb-4">
+        <div class="max-w-6xl mx-auto px-4 py-4 text-center text-gray-600">
+            "So many books, so little time."
+        </div>
+    </footer>
+    <!-- Made by https://emiliocantuc.github.io -->
+
+    <script>
+        function closeModal(id) {
+            document.getElementById(`edit-modal-${id}`)?.remove();
+        }
+
+        function toggleMenu(id) {
+            const menu = document.getElementById(`menu-${id}`);
+            menu.classList.toggle('hidden');
+            
+            const closeOnClickOutside = (e) => {
+                if (!e.target.closest(`#menu-${id}`) && !e.target.closest('button')) {
+                    menu.classList.add('hidden');
+                    document.removeEventListener('click', closeOnClickOutside);
+                }
+            };
+            document.addEventListener('click', closeOnClickOutside);
+        }
+
+        function editBookName(btn) {
+            const highlight = btn.closest('[data-book-title]');
+            const bookTitle = highlight.dataset.bookTitle;
+            const newName = prompt('Edit book name:', bookTitle);
+            
+            if (!newName || newName === bookTitle) return;
+
+            const formData = new FormData();
+            formData.append('new_name', newName);
+
+            fetch(`/book/${encodeURIComponent(bookTitle)}/edit`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => alert(response.ok ? 'Book name updated! Please refresh.' : 'Update failed.'));
+        }
+        
+        function deleteBook(btn) {
+            const highlight = btn.closest('[data-book-title]');
+            fetch(`/book/${encodeURIComponent(highlight.dataset.bookTitle)}/delete`, {
+                method: 'POST'
+            })
+            .then(response => alert(response.ok ? 'Book deleted! Please refresh.' : 'Deletion failed.'));
+        }
+    </script>
+</body>
+</html>

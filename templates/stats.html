@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Highlights Statistics{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Statistics Dashboard</h1>
+    
+    <div class="row">
+        <!-- Summary Cards -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Highlights</h5>
+                    <h2 class="display-4">{{ stats.active_highlights }}</h2>
+                    <p class="text-muted">{{ stats.total_highlights - stats.active_highlights }} deleted</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Books</h5>
+                    <h2 class="display-4">{{ stats.active_books }}</h2>
+                    <p class="text-muted">{{ stats.favorite_highlights }} favorites</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Reviews</h5>
+                    <h2 class="display-4">{{ stats.total_reviewed }}</h2>
+                    <p class="text-muted">{{ stats.mastered_highlights }} mastered</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Avg Reviews</h5>
+                    <h2 class="display-4">{{ stats.avg_reviews_per_highlight|round(1) }}</h2>
+                    <p class="text-muted">Max: {{ stats.max_reviews }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Top Books -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    Top Books
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Highlights</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in stats.top_books %}
+                                <tr>
+                                    <td>{{ book.book_title }}</td>
+                                    <td>{{ book.highlight_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Length Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    Highlight Length Distribution
+                </div>
+                <div class="card-body">
+                    <canvas id="lengthChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Monthly Activity -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    Monthly Activity
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Color Distribution -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    Highlight Colors
+                </div>
+                <div class="card-body">
+                    <canvas id="colorChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Length Distribution Chart
+    const lengthCtx = document.getElementById('lengthChart').getContext('2d');
+    const lengthChart = new Chart(lengthCtx, {
+        type: 'pie',
+        data: {
+            labels: [{% for item in stats.length_distribution %}'{{ item.length_category }}',{% endfor %}],
+            datasets: [{
+                data: [{% for item in stats.length_distribution %}{{ item.count }},{% endfor %}],
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+    
+    // Monthly Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for item in stats.monthly_activity %}'{{ item.month }}',{% endfor %}],
+            datasets: [{
+                label: 'New Highlights',
+                data: [{% for item in stats.monthly_activity %}{{ item.new_highlights }},{% endfor %}],
+                backgroundColor: '#36A2EB'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Color Distribution Chart
+    const colorCtx = document.getElementById('colorChart').getContext('2d');
+    const colorChart = new Chart(colorCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for item in stats.color_distribution %}'{{ item.color }}',{% endfor %}],
+            datasets: [{
+                data: [{% for item in stats.color_distribution %}{{ item.count }},{% endfor %}],
+                backgroundColor: [{% for item in stats.color_distribution %}'{{ item.color }}',{% endfor %}]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
