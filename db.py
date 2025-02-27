@@ -130,7 +130,7 @@ def book_current_name(book_str):
         ).fetchone()
 
         return result['book_title'] if result else book_str
-
+        
 def get_highlight_stats():
     """Get various statistics about highlights collection"""
     with get_db() as conn:
@@ -138,70 +138,80 @@ def get_highlight_stats():
         
         # Total counts
         basic_counts = conn.execute("""
-            SELECT 
-                COUNT(*) as total_highlights,
-                SUM(CASE WHEN deleted = 0 THEN 1 ELSE 0 END) as active_highlights,
-                SUM(CASE WHEN favorite = 1 AND deleted = 0 THEN 1 ELSE 0 END) as favorite_highlights,
-                COUNT(DISTINCT book_title) as total_books,
-                COUNT(DISTINCT CASE WHEN deleted = 0 THEN book_title ELSE NULL END) as active_books
-            FROM highlights
+        SELECT
+            COUNT(*) as total_highlights,
+            SUM(CASE WHEN deleted = 0 THEN 1 ELSE 0 END) as active_highlights,
+            SUM(CASE WHEN favorite = 1 AND deleted = 0 THEN 1 ELSE 0 END) as favorite_highlights,
+            COUNT(DISTINCT book_title) as total_books,
+            COUNT(DISTINCT CASE WHEN deleted = 0 THEN book_title ELSE NULL END) as active_books
+        FROM highlights
         """).fetchone()
-        
         stats.update(dict(basic_counts))
         
         # Review stats
         review_stats = conn.execute("""
-            SELECT 
-                COUNT(*) as total_reviewed,
-                AVG(review_count) as avg_reviews_per_highlight,
-                MAX(review_count) as max_reviews
-            FROM highlights
+        SELECT
+            COUNT(*) as total_reviewed,
+            AVG(review_count) as avg_reviews_per_highlight,
+            MAX(review_count) as max_reviews
+        FROM highlights
         """).fetchone()
-        
         stats.update(dict(review_stats))
         
         # Books with most highlights
         stats['top_books'] = conn.execute("""
-            SELECT book_title, COUNT(*) as highlight_count
-            FROM highlights
-            WHERE deleted = 0
-            GROUP BY book_title
-            ORDER BY highlight_count DESC
-            LIMIT 5
+        SELECT book_title, COUNT(*) as highlight_count
+        FROM highlights
+        WHERE deleted = 0
+        GROUP BY book_title
+        ORDER BY highlight_count DESC
+        LIMIT 5
+        """).fetchall()
+        
+        # Recently highlighted books (last 5)
+        stats['recent_books'] = conn.execute("""
+        SELECT 
+            book_title, 
+            MAX(timestamp) as last_highlight_date
+        FROM highlights
+        WHERE deleted = 0
+        GROUP BY book_title
+        ORDER BY last_highlight_date DESC
+        LIMIT 5
         """).fetchall()
         
         # Monthly activity
         stats['monthly_activity'] = conn.execute("""
-            SELECT 
-                strftime('%Y-%m', timestamp) as month,
-                COUNT(*) as new_highlights
-            FROM highlights
-            GROUP BY month
-            ORDER BY month DESC
-            LIMIT 12
+        SELECT
+            strftime('%Y-%m', timestamp) as month,
+            COUNT(*) as new_highlights
+        FROM highlights
+        GROUP BY month
+        ORDER BY month DESC
+        LIMIT 12
         """).fetchall()
         
         # Highlight length distribution
         stats['length_distribution'] = conn.execute("""
-            SELECT 
-                CASE 
-                    WHEN LENGTH(highlight_text) < 100 THEN 'Short (<100 chars)'
-                    WHEN LENGTH(highlight_text) < 300 THEN 'Medium (100-300 chars)'
-                    ELSE 'Long (>300 chars)'
-                END as length_category,
-                COUNT(*) as count
-            FROM highlights
-            WHERE deleted = 0
-            GROUP BY length_category
+        SELECT
+            CASE
+                WHEN LENGTH(highlight_text) < 100 THEN 'Short (<100 chars)'
+                WHEN LENGTH(highlight_text) < 300 THEN 'Medium (100-300 chars)'
+                ELSE 'Long (>300 chars)'
+            END as length_category,
+            COUNT(*) as count
+        FROM highlights
+        WHERE deleted = 0
+        GROUP BY length_category
         """).fetchall()
         
         # Color distribution
         stats['color_distribution'] = conn.execute("""
-            SELECT color, COUNT(*) as count
-            FROM highlights
-            WHERE deleted = 0
-            GROUP BY color
-            ORDER BY count DESC
+        SELECT color, COUNT(*) as count
+        FROM highlights
+        WHERE deleted = 0
+        GROUP BY color
+        ORDER BY count DESC
         """).fetchall()
         
         return stats

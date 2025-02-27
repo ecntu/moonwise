@@ -16,7 +16,7 @@ SESSION_SECRET = os.environ.get('SESSION_SECRET', 'devkey')
 MOON_READER_TOKEN = os.environ.get('SESSION_SECRET', 'token not set')
 PASSWORD = os.environ['PASSWORD']
 
-PUBLIC_ROUTES = ['check_login', 'login', 'logout', 'index', 'stats', 'static']
+PUBLIC_ROUTES = ['check_login', 'login', 'logout', 'index', 'stats', 'static', 'mr_import']
 assert 'check_login' in PUBLIC_ROUTES
 
 app = Flask(__name__)
@@ -36,6 +36,7 @@ def require_auth():
 def check_login():
     if request.json.get('password') == PASSWORD:
         session['logged_in'] = True
+        session.permanent = True
         return jsonify(success = True)
     return jsonify(success = False)
 
@@ -149,16 +150,18 @@ def book_action(book_str, action):
 
 
 @app.route('/mr-import', methods=['POST'])
-def mr_add():
+def mr_import():
     """Import highlights from MoonReader with 'Readwise sync' function"""
 
     token = request.headers.get('Authorization', 'Token').split('Token')[1].strip()
     if token != os.environ.get('MOON_READER_TOKEN'):
-        print('tokens don\'t match')
+        print('Token does not match')
         return '', 500
 
+    data = request.get_json()['highlights'][0]
+
     db.add_highlight({
-        'book_title': title, 'highlight_text': data['text'],
+        'book_title': data['title'], 'highlight_text': data['text'],
         'author': data['author'], 'location': data['chapter']
     })
     

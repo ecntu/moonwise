@@ -4,115 +4,111 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Statistics Dashboard</h1>
+    <h1 class="mb-4 text-center"><strong>Statistics Dashboard</strong></h1>
     
-    <div class="row">
-        <!-- Summary Cards -->
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Highlights</h5>
-                    <h2 class="display-4">{{ stats.active_highlights }}</h2>
-                    <p class="text-muted">{{ stats.total_highlights - stats.active_highlights }} deleted</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Books</h5>
-                    <h2 class="display-4">{{ stats.active_books }}</h2>
-                    <p class="text-muted">{{ stats.favorite_highlights }} favorites</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Reviews</h5>
-                    <h2 class="display-4">{{ stats.total_reviewed }}</h2>
-                    <p class="text-muted">{{ stats.mastered_highlights }} mastered</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Avg Reviews</h5>
-                    <h2 class="display-4">{{ stats.avg_reviews_per_highlight|round(1) }}</h2>
-                    <p class="text-muted">Max: {{ stats.max_reviews }}</p>
-                </div>
-            </div>
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8 text-center">
+            <p class="lead"><strong>Highlights:</strong> {{ stats.active_highlights }} total, {{ stats.favorite_highlights }} favorites, {{ stats.total_highlights - stats.active_highlights }} deleted</p>
+            <p class="lead"><strong>Books:</strong> {{ stats.active_books }} total</p>
         </div>
     </div>
-    
-    <div class="row">
-        <!-- Top Books -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    Top Books
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Book</th>
-                                    <th>Highlights</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for book in stats.top_books %}
-                                <tr>
-                                    <td>{{ book.book_title }}</td>
-                                    <td>{{ book.highlight_count }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Length Distribution -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    Highlight Length Distribution
-                </div>
-                <div class="card-body">
-                    <canvas id="lengthChart" width="400" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row">
+
+    <div class="row justify-content-center">
         <!-- Monthly Activity -->
         <div class="col-md-8 mb-4">
             <div class="card h-100">
-                <div class="card-header">
-                    Monthly Activity
+                <div class="card-header text-center">
+                    <strong>Monthly Activity</strong>
                 </div>
-                <div class="card-body">
-                    <canvas id="activityChart" width="400" height="200"></canvas>
+                <div class="card-body text-center">
+                    <canvas id="activityChart" width="400" height="150"></canvas>
                 </div>
             </div>
         </div>
-        
-        <!-- Color Distribution -->
-        <div class="col-md-4 mb-4">
+    </div>
+    <br>
+    <div class="row justify-content-center">
+        <!-- Recently Highlighted Books -->
+        <div class="col-md-8 mb-4">
             <div class="card h-100">
-                <div class="card-header">
-                    Highlight Colors
+                <div class="card-header text-center">
+                    <strong>Recently Highlighted Books</strong>
                 </div>
-                <div class="card-body">
-                    <canvas id="colorChart" width="400" height="200"></canvas>
+                <div class="card-body text-center">
+                    <table class="table table-striped mx-auto" style="max-width: 90%;">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Book</th>
+                                <th>Last Highlight</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in stats.recent_books %}
+                            <tr>
+                                <td>{{ book.book_title }}</td>
+                                <td>{{ book.last_highlight_date }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+
+    <div class="row justify-content-center">
+        <!-- Top Books -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <strong>Top Books by Highlights</strong>
+                </div>
+                <div class="card-body text-center">
+                    <table class="table table-striped mx-auto" style="max-width: 90%;">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Book</th>
+                                <th>Highlights</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in stats.top_books %}
+                            <tr>
+                                <td>{{ book.book_title }}</td>
+                                <td class="text-center">{{ book.highlight_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <!-- Charts -->
+        <div class="col-md-8 mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <strong>Highlight Length</strong>
+                        </div>
+                        <div class="card-body text-center">
+                            <canvas id="lengthChart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header text-center">
+                            <strong>Highlight Colors</strong>
+                        </div>
+                        <div class="card-body text-center">
+                            <canvas id="colorChart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,9 +130,16 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'right',
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 11
+                        }
+                    }
                 }
             }
         }
@@ -156,9 +159,31 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        font: {
+                            size: 11
+                        }
+                    }
                 }
             }
         }
@@ -177,9 +202,16 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'right',
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 11
+                        }
+                    }
                 }
             }
         }
