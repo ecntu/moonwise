@@ -57,11 +57,12 @@ def index():
     favorites_only = request.args.get('favorites') == '1'
     random_sort = request.args.get('random') == '1'
 
-    # Logged out restrictions
+    # Logged out restrictions -- just show last 20ish favorites
     if not g.logged_in:
-        favorites_only = random_sort = 0
+        random_sort = 0
+        favorites_only = 1
         book_filter = ''
-        limit = 10
+        limit = None
     else:
         limit = N_INDEX_LIMIT
     
