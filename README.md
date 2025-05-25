@@ -14,7 +14,7 @@ sqlite3 $(awk '/mrbooks.db$/ {print FNR".tag"}' _names.list)
 You'll notice the db has several tables and that your highlights are in `notes`. `import.py` has an example script.
 
 
-The rest of this repo is a simple "vibe coded" flask site for managing my own highlights. Live (with limited functionality if not logged in) [here](https://highlights.cervini.casa).
+The rest of this repo is a simple "vibe coded" flask site for managing my own highlights. Live (with limited functionality if not logged in) [here](https://highlights.ecntu.com/).
 
 ## Setup
 
