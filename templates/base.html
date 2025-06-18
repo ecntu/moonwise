@@ -17,10 +17,10 @@
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-center items-center h-16"> <div class="flex space-x-4">
                     <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-gray-900">Home</a>
-                    <a href="{{ url_for('review') }}" class="text-gray-700 hover:text-gray-900">Review</a>
                     <a href="{{ url_for('stats') }}" class="text-gray-700 hover:text-gray-900">Stats</a>
                     {% if g.logged_in %}
                     <a href="{{ url_for('add_highlight') }}" class="text-gray-700 hover:text-gray-900">Add Highlight</a>
+                    <a href="{{ url_for('review') }}" class="text-gray-700 hover:text-gray-900">Review</a>
                     {% endif %}
                 </div>
                 <div class="ml-4"> {% if g.logged_in %}
