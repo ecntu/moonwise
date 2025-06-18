@@ -19,6 +19,9 @@
                     <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-gray-900">Home</a>
                     <a href="{{ url_for('review') }}" class="text-gray-700 hover:text-gray-900">Review</a>
                     <a href="{{ url_for('stats') }}" class="text-gray-700 hover:text-gray-900">Stats</a>
+                    {% if g.logged_in %}
+                    <a href="{{ url_for('add_highlight') }}" class="text-gray-700 hover:text-gray-900">Add Highlight</a>
+                    {% endif %}
                 </div>
                 <div class="ml-4"> {% if g.logged_in %}
                         <a href="{{ url_for('logout') }}" class="text-gray-700 hover:text-gray-900">Logout</a>
