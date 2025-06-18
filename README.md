@@ -15,6 +15,7 @@ You'll notice the db has several tables and that your highlights are in `notes`.
 
 
 The rest of this repo is a simple "vibe coded" flask site for managing my own highlights. Live (with limited functionality if not logged in) [here](https://highlights.ecntu.com/).
+When logged in you can also add passages manually at `/add`.
 
 ## Setup
 

@@ -1,0 +1,45 @@
+<!-- templates/add_highlight.html -->
+{% extends "base.html" %}
+
+{% block title %}Add Highlight{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <form method="POST" class="bg-white p-6 rounded-lg shadow space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Book Title</label>
+            <input type="text" name="book_title" required
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Author (optional)</label>
+            <input type="text" name="author"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Highlight Text</label>
+            <textarea name="highlight_text" required rows="4"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Note (optional)</label>
+            <textarea name="note" rows="2"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+        </div>
+        <div>
+            <label class="flex items-center gap-2">
+                <input type="checkbox" name="favorite" class="rounded border-gray-300">
+                <span class="text-sm font-medium text-gray-700">Mark as favorite</span>
+            </label>
+        </div>
+        <div class="flex justify-end gap-4">
+            <a href="{{ url_for('index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                Cancel
+            </a>
+            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                Add Highlight
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
