@@ -158,20 +158,11 @@ def get_highlight_stats():
         """).fetchone()
         stats.update(dict(review_stats))
         
-        # Books with most highlights
-        stats['top_books'] = conn.execute("""
-        SELECT book_title, COUNT(*) as highlight_count
-        FROM highlights
-        WHERE deleted = 0
-        GROUP BY book_title
-        ORDER BY highlight_count DESC
-        LIMIT 5
-        """).fetchall()
-        
         # Recently highlighted books (last 5)
         stats['recent_books'] = conn.execute("""
-        SELECT 
-            book_title, 
+        SELECT
+            book_title,
+            MAX(author) as author,
             MAX(timestamp) as last_highlight_date
         FROM highlights
         WHERE deleted = 0

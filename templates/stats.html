@@ -39,6 +39,7 @@
                         <thead class="table-primary">
                             <tr>
                                 <th>Book</th>
+                                <th>Author</th>
                                 <th>Last Highlight</th>
                             </tr>
                         </thead>
@@ -46,7 +47,8 @@
                             {% for book in stats.recent_books %}
                             <tr>
                                 <td>{{ book.book_title }}</td>
-                                <td>{{ book.last_highlight_date }}</td>
+                                <td>{{ book.author or '' }}</td>
+                                <td>{{ book.last_highlight_date | str_to_date }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -56,35 +58,6 @@
         </div>
     </div>
     <br>
-
-    <div class="row justify-content-center">
-        <!-- Top Books -->
-        <div class="col-md-8 mb-4">
-            <div class="card h-100">
-                <div class="card-header text-center">
-                    <strong>Top Books by Highlights</strong>
-                </div>
-                <div class="card-body text-center">
-                    <table class="table table-striped mx-auto" style="max-width: 90%;">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>Book</th>
-                                <th>Highlights</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for book in stats.top_books %}
-                            <tr>
-                                <td>{{ book.book_title }}</td>
-                                <td class="text-center">{{ book.highlight_count }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
     
     <div class="row justify-content-center">
         <!-- Charts -->
@@ -148,13 +121,16 @@
     // Monthly Activity Chart
     const activityCtx = document.getElementById('activityChart').getContext('2d');
     const activityChart = new Chart(activityCtx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: [{% for item in stats.monthly_activity %}'{{ item.month }}',{% endfor %}],
             datasets: [{
                 label: 'New Highlights',
                 data: [{% for item in stats.monthly_activity %}{{ item.new_highlights }},{% endfor %}],
-                backgroundColor: '#36A2EB'
+                borderColor: '#36A2EB',
+                backgroundColor: '#36A2EB20',
+                fill: false,
+                tension: 0.3
             }]
         },
         options: {
