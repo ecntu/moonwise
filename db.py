@@ -180,29 +180,5 @@ def get_highlight_stats():
         GROUP BY month
         ORDER BY month DESC
         LIMIT 12
-        """).fetchall()
-        
-        # Highlight length distribution
-        stats['length_distribution'] = conn.execute("""
-        SELECT
-            CASE
-                WHEN LENGTH(highlight_text) < 100 THEN 'Short (<100 chars)'
-                WHEN LENGTH(highlight_text) < 300 THEN 'Medium (100-300 chars)'
-                ELSE 'Long (>300 chars)'
-            END as length_category,
-            COUNT(*) as count
-        FROM highlights
-        WHERE deleted = 0
-        GROUP BY length_category
-        """).fetchall()
-        
-        # Color distribution
-        stats['color_distribution'] = conn.execute("""
-        SELECT color, COUNT(*) as count
-        FROM highlights
-        WHERE deleted = 0
-        GROUP BY color
-        ORDER BY count DESC
-        """).fetchall()
-        
+        """).fetchall()        
         return stats
