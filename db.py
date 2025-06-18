@@ -158,20 +158,11 @@ def get_highlight_stats():
         """).fetchone()
         stats.update(dict(review_stats))
         
-        # Books with most highlights
-        stats['top_books'] = conn.execute("""
-        SELECT book_title, COUNT(*) as highlight_count
-        FROM highlights
-        WHERE deleted = 0
-        GROUP BY book_title
-        ORDER BY highlight_count DESC
-        LIMIT 5
-        """).fetchall()
-        
         # Recently highlighted books (last 5)
         stats['recent_books'] = conn.execute("""
-        SELECT 
-            book_title, 
+        SELECT
+            book_title,
+            MAX(author) as author,
             MAX(timestamp) as last_highlight_date
         FROM highlights
         WHERE deleted = 0
@@ -189,29 +180,5 @@ def get_highlight_stats():
         GROUP BY month
         ORDER BY month DESC
         LIMIT 12
-        """).fetchall()
-        
-        # Highlight length distribution
-        stats['length_distribution'] = conn.execute("""
-        SELECT
-            CASE
-                WHEN LENGTH(highlight_text) < 100 THEN 'Short (<100 chars)'
-                WHEN LENGTH(highlight_text) < 300 THEN 'Medium (100-300 chars)'
-                ELSE 'Long (>300 chars)'
-            END as length_category,
-            COUNT(*) as count
-        FROM highlights
-        WHERE deleted = 0
-        GROUP BY length_category
-        """).fetchall()
-        
-        # Color distribution
-        stats['color_distribution'] = conn.execute("""
-        SELECT color, COUNT(*) as count
-        FROM highlights
-        WHERE deleted = 0
-        GROUP BY color
-        ORDER BY count DESC
-        """).fetchall()
-        
+        """).fetchall()        
         return stats
