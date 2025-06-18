@@ -85,6 +85,24 @@
             })
             .then(response => alert(response.ok ? 'Book name updated! Please refresh.' : 'Update failed.'));
         }
+
+        function editBookAuthor(btn) {
+            const highlight = btn.closest('[data-book-title]');
+            const bookTitle = highlight.dataset.bookTitle;
+            const currentAuthor = highlight.dataset.bookAuthor || '';
+            const newAuthor = prompt('Edit book author:', currentAuthor);
+
+            if (newAuthor === null) return;
+
+            const formData = new FormData();
+            formData.append('new_author', newAuthor);
+
+            fetch(`/book/${encodeURIComponent(bookTitle)}/edit_author`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => alert(response.ok ? 'Author updated! Please refresh.' : 'Update failed.'));
+        }
         
         function deleteBook(btn) {
             const highlight = btn.closest('[data-book-title]');

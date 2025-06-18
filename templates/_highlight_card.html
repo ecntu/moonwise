@@ -1,5 +1,5 @@
 {% macro highlight_card(highlight, show_all_actions=True) %}
-<div id="highlight-{{ highlight.id }}" class="bg-white p-4 rounded-lg shadow relative transition-opacity {{ 'opacity-50' if highlight.deleted else '' }}" data-book-title="{{ highlight.book_title }}">
+<div id="highlight-{{ highlight.id }}" class="bg-white p-4 rounded-lg shadow relative transition-opacity {{ 'opacity-50' if highlight.deleted else '' }}" data-book-title="{{ highlight.book_title }}" data-book-author="{{ highlight.author | default('') }}">
     <!-- Header -->
     <div class="mb-4 flex justify-between items-start">
         <div>
@@ -21,6 +21,9 @@
                 <div class="py-1">
                     <button onclick="editBookName(this)" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         Edit book name
+                    </button>
+                    <button onclick="editBookAuthor(this)" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        Edit author
                     </button>
                     <button onclick="if(confirm('Are you sure?')) deleteBook(this)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                         Delete book

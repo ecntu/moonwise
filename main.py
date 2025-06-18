@@ -133,11 +133,15 @@ def highlight_action(highlight_id, action):
 
 @app.route('/book/<book_str>/<action>', methods=['POST'])
 def book_action(book_str, action):
-    """Handle renaming and deleting books"""
+    """Handle renaming, deleting, and editing book author"""
     print('here')
-    
+
     if action == 'edit':
         db.rename_book(book_str, request.form.get('new_name'))
+        return '', 200
+
+    elif action == 'edit_author':
+        db.update_book_author(book_str, request.form.get('new_author'))
         return '', 200
 
     elif action == 'delete':
@@ -146,7 +150,7 @@ def book_action(book_str, action):
         return '', 200
 
     else:
-        app.logger.warning(f"Invalid action '{action}' for book {book_id}")
+        app.logger.warning(f"Invalid action '{action}' for book {book_str}")
         return '', 400
 
 

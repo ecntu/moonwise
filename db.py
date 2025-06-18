@@ -109,6 +109,18 @@ def rename_book(old_book_str, new_book_str):
         """, (new_book_str, old_book_str))
         conn.commit()
 
+def update_book_author(book_str, new_author):
+    """Update the author for all highlights in the given book"""
+    book_str = book_current_name(book_str)
+    with get_db() as conn:
+        conn.execute(
+            """
+            UPDATE highlights SET author = ? WHERE book_title = ?
+        """,
+            (new_author, book_str),
+        )
+        conn.commit()
+
 def delete_book(book_str):
     """Delete a book and all its highlights from the database"""
     book_str = book_current_name(book_str)
