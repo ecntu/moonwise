@@ -2,11 +2,8 @@ import os
 from datetime import datetime
 from db import get_db
 
-from dotenv import load_dotenv
-
 if __name__ == '__main__':
 
-    load_dotenv() # load .env
     N_REVIEW_PASSAGES = int(os.environ.get('N_REVIEW_PASSAGES', 5))
     N_FAVORITES_IN_REVIEW = int(os.environ.get('N_FAVORITES_IN_REVIEW', 1))
 

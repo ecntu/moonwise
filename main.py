@@ -1,13 +1,9 @@
-
 import os
 from flask import Flask, render_template, render_template_string, request, redirect, url_for, flash, session, jsonify
 from flask import g # global session-level object
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 import db
-
-from dotenv import load_dotenv # load .env
-load_dotenv()
 
 N_INDEX_LIMIT = 100
 

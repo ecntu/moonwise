@@ -18,9 +18,7 @@ The rest of this repo is a simple "vibe coded" flask site for managing my own hi
 
 ## Setup
 
-1. Run `pip install -r requirements.txt`
-
-2. Create and `.env` file with variables:
+1. Create and `.env` file with variables:
 ```{bash}
 PASSWORD=
 SESSION_SECRET=
@@ -29,10 +27,9 @@ N_REVIEW_PASSAGES=
 N_FAVORITES_IN_REVIEW=
 ```
 
-3. Run the `main.py` flask app.
-
-4. And setup cron job to run `review.py`. For example:
+2. Run `uv run --env-file .env main.py`
+3. Optionally, setup cron job to run `review.py`. For example:
 
 ```{text}
-0 13 * * * cd ~/moonwise && python3 review.py && sh notify.sh
+0 13 * * * cd ~/moonwise && uv run review.py && sh notify.sh
 ```
