@@ -18,3 +18,41 @@ CREATE TABLE IF NOT EXISTS highlights (
     review_count INTEGER DEFAULT 0, 
     review_today BOOLEAN DEFAULT 0
 );
+
+-- FTS table for full-text search
+CREATE VIRTUAL TABLE IF NOT EXISTS highlights_fts USING fts5(
+    highlight_text,
+    note,
+    content='highlights',
+    content_rowid='id'
+);
+
+-- Triggers to keep FTS table in sync with highlights table
+CREATE TRIGGER IF NOT EXISTS highlights_after_insert
+AFTER INSERT ON highlights
+BEGIN
+    INSERT INTO highlights_fts(rowid, highlight_text, note)
+    VALUES (new.id, new.highlight_text, new.note);
+END;
+
+CREATE TRIGGER IF NOT EXISTS highlights_after_delete
+AFTER DELETE ON highlights
+BEGIN
+    INSERT INTO highlights_fts(highlights_fts, rowid)
+    VALUES ('delete', old.id);
+END;
+
+
+CREATE TRIGGER IF NOT EXISTS highlights_after_update
+AFTER UPDATE ON highlights
+BEGIN
+    INSERT INTO highlights_fts(highlights_fts, rowid)
+    VALUES ('delete', old.id);
+
+    INSERT INTO highlights_fts(rowid, highlight_text, note)
+    VALUES (new.id, new.highlight_text, new.note);
+END;
+
+
+INSERT INTO highlights_fts(rowid, highlight_text, note)
+SELECT id, highlight_text, note FROM highlights;

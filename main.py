@@ -52,6 +52,7 @@ def index():
     book_filter = request.args.get('book')
     favorites_only = request.args.get('favorites') == '1'
     random_sort = request.args.get('random') == '1'
+    search_query = request.args.get('q')
 
     # Logged out restrictions -- just show last 20ish favorites
     if not g.logged_in:
@@ -62,15 +63,16 @@ def index():
     else:
         limit = N_INDEX_LIMIT
     
-    highlights = db.get_all_highlights(book_filter, favorites_only, limit=limit, shuffle=random_sort)
+    highlights = db.get_all_highlights(book_filter, favorites_only, limit=limit, shuffle=random_sort, search_query=search_query)
     books = db.get_all_books()
     
-    return render_template('index.html', 
-                         highlights=highlights, 
+    return render_template('index.html',
+                         highlights=highlights,
                          books=books,
                          current_book=book_filter,
                          favorites_only=favorites_only,
-                         random=random_sort)
+                         random=random_sort,
+                         search_query=search_query)
 
 @app.route('/review')
 def review():

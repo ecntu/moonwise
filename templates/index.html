@@ -15,18 +15,15 @@
                         <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                     </svg>
                 </div>
-                <input type="text" id="bookSearch" placeholder="Search books ..."
-                    class="w-full pl-8 pr-2 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
-                <div id="bookList" class="absolute z-10 bg-white border rounded-lg mt-1 w-full max-h-48 overflow-y-auto shadow-lg hidden">
-                    <div class="p-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 text-gray-700 text-sm" data-value="">
-                        All Books
+                <form action="/" method="get" class="relative flex-grow w-full">
+                    <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
                     </div>
-                    {% for book in books %}
-                        <div class="p-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 text-gray-700 text-sm" data-value="{{ book.book_title }}">
-                            {{ book.book_title }}
-                        </div>
-                    {% endfor %}
-                </div>
+                    <input type="text" name="q" id="search" placeholder="Search highlights..." value="{{ search_query or '' }}"
+                        class="w-full pl-8 pr-2 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                </form>
             </div>
 
             <div class="flex gap-1">
@@ -70,49 +67,28 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const bookSearch = document.getElementById("bookSearch");
-        const bookList = document.getElementById("bookList");
         const favToggle = document.getElementById("favToggle");
         const sortToggle = document.getElementById("sortToggle");
-
-        // Show book list on focus
-        bookSearch.addEventListener("focus", () => bookList.classList.remove("hidden"));
-        
-        // Hide book list on click outside
-        document.addEventListener("click", (e) => {
-            if (!bookSearch.contains(e.target) && !bookList.contains(e.target)) {
-                bookList.classList.add("hidden");
-            }
-        });
-
-        // Filter books as you type
-        bookSearch.addEventListener("input", function() {
-            const search = this.value.toLowerCase();
-            document.querySelectorAll("#bookList div").forEach(div => {
-                const shouldShow = div.textContent.toLowerCase().includes(search);
-                div.style.display = shouldShow ? "flex" : "none";
-            });
-        });
+        const searchInput = document.getElementById("search");
 
         // Update URL with current filters
         function updateFilters() {
-            const params = new URLSearchParams();
+            const params = new URLSearchParams(window.location.search);
             
-            if (bookSearch.value) params.set('book', bookSearch.value);
-            if (favToggle.querySelector('svg').getAttribute('fill') === 'currentColor') params.set('favorites', '1');
-            if (sortToggle.classList.contains('active')) params.set('random', '1');
+            if (favToggle.querySelector('svg').getAttribute('fill') === 'currentColor') {
+                params.set('favorites', '1');
+            } else {
+                params.delete('favorites');
+            }
+
+            if (sortToggle.classList.contains('active')) {
+                params.set('random', '1');
+            } else {
+                params.delete('random');
+            }
             
             window.location.search = params.toString();
         }
-
-        // Select book and update
-        bookList.addEventListener("click", function(e) {
-            const bookDiv = e.target.closest('[data-value]');
-            if (bookDiv) {
-                bookSearch.value = bookDiv.dataset.value;
-                updateFilters();
-            }
-        });
 
         // Toggle favorites and update
         favToggle.addEventListener("click", function() {
