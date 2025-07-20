@@ -28,18 +28,44 @@ def get_highlights_for_review():
     with get_db() as conn:
         return conn.execute("SELECT * FROM highlights WHERE review_today = 1").fetchall()
 
-def get_all_highlights(book_filter=None, favorites_only=False, limit=None, shuffle=False):
-    """Get all non-deleted highlights with optional filtering"""
+def get_all_highlights(book_filter=None, favorites_only=False, limit=None, shuffle=False, search_query=None):
+    """Get all non-deleted highlights with optional filtering and search"""
+    if search_query:
+        return search_highlights(search_query, book_filter, favorites_only, limit, shuffle)
+
     with get_db() as conn:
         query = "SELECT * FROM highlights WHERE deleted = 0"
-        params = []  
+        params = []
         if book_filter:
             query += " AND book_title = ?"
-            params.append(book_filter)   
+            params.append(book_filter)
         if favorites_only:
             query += " AND favorite = 1"
         
         query += " ORDER BY " + ("RANDOM()" if shuffle else "timestamp DESC")
+        if limit:
+            query += " LIMIT ?"
+            params.append(limit)
+
+        return conn.execute(query, params).fetchall()
+
+def search_highlights(search_query, book_filter=None, favorites_only=False, limit=None, shuffle=False):
+    """Search highlights using FTS"""
+    with get_db() as conn:
+        query = """
+            SELECT h.* FROM highlights h
+            JOIN highlights_fts fts ON h.id = fts.rowid
+            WHERE highlights_fts MATCH ? AND h.deleted = 0
+        """
+        params = [search_query]
+
+        if book_filter:
+            query += " AND h.book_title = ?"
+            params.append(book_filter)
+        if favorites_only:
+            query += " AND h.favorite = 1"
+
+        query += " ORDER BY " + ("RANDOM()" if shuffle else "fts.rank")
         if limit:
             query += " LIMIT ?"
             params.append(limit)
