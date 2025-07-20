@@ -38,15 +38,21 @@ END;
 CREATE TRIGGER IF NOT EXISTS highlights_after_delete
 AFTER DELETE ON highlights
 BEGIN
-    INSERT INTO highlights_fts(highlights_fts, rowid, highlight_text, note)
-    VALUES ('delete', old.id, old.highlight_text, old.note);
+    INSERT INTO highlights_fts(highlights_fts, rowid)
+    VALUES ('delete', old.id);
 END;
+
 
 CREATE TRIGGER IF NOT EXISTS highlights_after_update
 AFTER UPDATE ON highlights
 BEGIN
-    INSERT INTO highlights_fts(highlights_fts, rowid, highlight_text, note)
-    VALUES ('delete', old.id, old.highlight_text, old.note);
+    INSERT INTO highlights_fts(highlights_fts, rowid)
+    VALUES ('delete', old.id);
+
     INSERT INTO highlights_fts(rowid, highlight_text, note)
     VALUES (new.id, new.highlight_text, new.note);
 END;
+
+
+INSERT INTO highlights_fts(rowid, highlight_text, note)
+SELECT id, highlight_text, note FROM highlights;
