@@ -22,7 +22,13 @@
                         </svg>
                     </div>
                     <input type="text" name="q" id="search" placeholder="Search highlights..." value="{{ search_query or '' }}"
-                        class="w-full pl-8 pr-2 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                        class="w-full pl-8 pr-2 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                        list="book-titles">
+                    <datalist id="book-titles">
+                        {% for book in books %}
+                            <option value="{{ book.book_title }}">
+                        {% endfor %}
+                    </datalist>
                 </form>
             </div>
 
