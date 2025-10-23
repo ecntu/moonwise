@@ -33,3 +33,11 @@ N_FAVORITES_IN_REVIEW=
 ```{text}
 0 13 * * * cd ~/moonwise && uv run review.py && sh notify.sh
 ```
+
+
+If you ever drop the `highlights_fts` table, re-populate it with:
+
+  ```sql
+  INSERT INTO highlights_fts(rowid, highlight_text, note)
+  SELECT id, highlight_text, note FROM highlights;
+  ```

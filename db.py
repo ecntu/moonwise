@@ -1,6 +1,5 @@
 # db.py
 import sqlite3
-from datetime import datetime, timedelta
 from contextlib import contextmanager
 
 DATABASE = "main.db"
@@ -237,7 +236,8 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
         """).fetchall()
 
         # Detailed recent books for recommender export
-        stats["recent_books_detailed"] = conn.execute("""
+        stats["recent_books_detailed"] = conn.execute(
+            """
         SELECT
             book_title,
             MAX(author) as author,
@@ -249,10 +249,13 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
         GROUP BY book_title
         ORDER BY last_highlight_date DESC
         LIMIT ?
-        """, (n_recent_books_detailed,)).fetchall()
+        """,
+            (n_recent_books_detailed,),
+        ).fetchall()
 
         # Top books by highlight volume
-        stats["top_books_by_highlights"] = conn.execute("""
+        stats["top_books_by_highlights"] = conn.execute(
+            """
         SELECT
             book_title,
             MAX(author) as author,
@@ -264,10 +267,13 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
         GROUP BY book_title
         ORDER BY total_highlights DESC, last_highlight_date DESC
         LIMIT ?
-        """, (n_top_books,)).fetchall()
+        """,
+            (n_top_books,),
+        ).fetchall()
 
         # Top books by favorite highlights
-        stats["top_books_by_favorites"] = conn.execute("""
+        stats["top_books_by_favorites"] = conn.execute(
+            """
         SELECT
             book_title,
             MAX(author) as author,
@@ -279,7 +285,9 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
         GROUP BY book_title
         ORDER BY favorite_highlights DESC, total_highlights DESC, last_highlight_date DESC
         LIMIT ?
-        """, (n_top_books,)).fetchall()
+        """,
+            (n_top_books,),
+        ).fetchall()
 
         # Monthly activity
         stats["monthly_activity"] = conn.execute("""

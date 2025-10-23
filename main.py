@@ -11,7 +11,7 @@ from flask import (
     jsonify,
 )
 from flask import g  # global session-level object
-from datetime import datetime, timedelta
+from datetime import datetime
 from types import SimpleNamespace
 import db
 
