@@ -60,6 +60,46 @@
             </div>
         </div>
     </div>
+    {% if g.logged_in %}
+    <div class="row justify-content-center">
+        <div class="col-md-10 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>Export-Friendly Stats</strong>
+                    <button id="copyStatsButton" class="btn btn-outline-primary btn-sm">Copy stats</button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4 stats-export-section" data-section-title="Last 50 Books Highlighted">
+                        <h5 class="text-center mb-3">Last 50 Books Highlighted</h5>
+                        <ul class="list-unstyled mb-0">
+                            {% for book in stats.recent_books_detailed %}
+                            <li><strong>{{ book.book_title }}</strong> (Author: {{ book.author or 'Unknown' }}, Highlights: {{ book.total_highlights }}, Favorites: {{ book.favorite_highlights }}, Last highlight: {{ book.last_highlight_date | str_to_date }})</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 stats-export-section mb-4" data-section-title="Top 10 by Highlights">
+                            <h5 class="text-center mb-3">Top 10 by Highlights</h5>
+                            <ul class="list-unstyled mb-0">
+                                {% for book in stats.top_books_by_highlights %}
+                                <li><strong>{{ book.book_title }}</strong> (Author: {{ book.author or 'Unknown' }}, Highlights: {{ book.total_highlights }}, Favorites: {{ book.favorite_highlights }})</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6 stats-export-section mb-4" data-section-title="Top 10 by Favorites">
+                            <h5 class="text-center mb-3">Top 10 by Favorites</h5>
+                            <ul class="list-unstyled mb-0">
+                                {% for book in stats.top_books_by_favorites %}
+                                <li><strong>{{ book.book_title }}</strong> (Author: {{ book.author or 'Unknown' }}, Highlights: {{ book.total_highlights }}, Favorites: {{ book.favorite_highlights }})</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <br>
     
 </div>
@@ -107,5 +147,32 @@
             }
         }
     });
+
+    const copyStatsButton = document.getElementById('copyStatsButton');
+    if (copyStatsButton) {
+        copyStatsButton.addEventListener('click', async () => {
+            const sections = document.querySelectorAll('.stats-export-section');
+            const lines = Array.from(sections).map(section => {
+                const title = section.dataset.sectionTitle;
+                const items = Array.from(section.querySelectorAll('li'))
+                    .map(li => li.textContent.trim())
+                    .filter(text => text.length);
+                if (!items.length) return null;
+                return `${title}: ${items.join('; ')}`;
+            }).filter(Boolean);
+
+            if (!lines.length) return;
+
+            const originalLabel = copyStatsButton.textContent;
+            try {
+                await navigator.clipboard.writeText(lines.join('\n'));
+                copyStatsButton.textContent = 'Copied!';
+            } catch (err) {
+                copyStatsButton.textContent = 'Copy failed';
+            } finally {
+                setTimeout(() => copyStatsButton.textContent = originalLabel, 2000);
+            }
+        });
+    }
 </script>
 {% endblock %}

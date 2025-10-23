@@ -196,7 +196,7 @@ def book_current_name(book_str):
         return result["book_title"] if result else book_str
 
 
-def get_highlight_stats(n_recent_books=5):
+def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_books=10):
     """Get various statistics about highlights collection"""
     with get_db() as conn:
         stats = {}
@@ -235,6 +235,51 @@ def get_highlight_stats(n_recent_books=5):
         ORDER BY last_highlight_date DESC
         LIMIT {n_recent_books}
         """).fetchall()
+
+        # Detailed recent books for recommender export
+        stats["recent_books_detailed"] = conn.execute("""
+        SELECT
+            book_title,
+            MAX(author) as author,
+            COUNT(*) as total_highlights,
+            SUM(CASE WHEN favorite = 1 THEN 1 ELSE 0 END) as favorite_highlights,
+            MAX(timestamp) as last_highlight_date
+        FROM highlights
+        WHERE deleted = 0
+        GROUP BY book_title
+        ORDER BY last_highlight_date DESC
+        LIMIT ?
+        """, (n_recent_books_detailed,)).fetchall()
+
+        # Top books by highlight volume
+        stats["top_books_by_highlights"] = conn.execute("""
+        SELECT
+            book_title,
+            MAX(author) as author,
+            COUNT(*) as total_highlights,
+            SUM(CASE WHEN favorite = 1 THEN 1 ELSE 0 END) as favorite_highlights,
+            MAX(timestamp) as last_highlight_date
+        FROM highlights
+        WHERE deleted = 0
+        GROUP BY book_title
+        ORDER BY total_highlights DESC, last_highlight_date DESC
+        LIMIT ?
+        """, (n_top_books,)).fetchall()
+
+        # Top books by favorite highlights
+        stats["top_books_by_favorites"] = conn.execute("""
+        SELECT
+            book_title,
+            MAX(author) as author,
+            COUNT(*) as total_highlights,
+            SUM(CASE WHEN favorite = 1 THEN 1 ELSE 0 END) as favorite_highlights,
+            MAX(timestamp) as last_highlight_date
+        FROM highlights
+        WHERE deleted = 0
+        GROUP BY book_title
+        ORDER BY favorite_highlights DESC, total_highlights DESC, last_highlight_date DESC
+        LIMIT ?
+        """, (n_top_books,)).fetchall()
 
         # Monthly activity
         stats["monthly_activity"] = conn.execute("""
