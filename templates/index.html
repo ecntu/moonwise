@@ -19,8 +19,10 @@
                             clip-rule="evenodd" />
                     </svg>
                 </div>
-                <input type="text" id="bookSearch" placeholder="Search books ..."
-                    class="w-full pl-8 pr-2 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm">
+                <input type="text" id="bookSearch" placeholder="Search books ..." value="{{ current_book or search_query or '' }}"
+                    data-selected-book="{{ current_book or '' }}"
+                    class="w-full pl-8 pr-2 py-2 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
+                    autocomplete="off">
                 <div id="bookList"
                     class="absolute z-10 bg-white border rounded-lg mt-1 w-full max-h-48 overflow-y-auto shadow-lg hidden">
                     <div class="p-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 text-gray-700 text-sm"
@@ -34,7 +36,8 @@
                     </div>
                     {% endfor %}
                     <div class="p-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 text-gray-700 text-sm"
-                        data-value="" id="fullTextQuery">
+                        data-value="{{ search_query or '' }}" data-active="{{ '1' if search_query else '0' }}" id="fullTextQuery">
+                        {% if search_query %}Full text search for "{{ search_query }}"{% endif %}
                     </div>
                 </div>
                 </input>
@@ -94,6 +97,23 @@
         const favToggle = document.getElementById("favToggle");
         const sortToggle = document.getElementById("sortToggle");
 
+        // Initialize state from server-rendered values
+        const initialQueryActive = fullTextQuery.dataset.active === '1';
+        const initialQueryValue = (fullTextQuery.dataset.value || '').trim();
+
+        if (initialQueryActive && initialQueryValue) {
+            fullTextQuery.textContent = `Full text search for "${initialQueryValue}"`;
+            fullTextQuery.style.display = "flex";
+            bookSearch.dataset.selectedBook = '';
+        } else {
+            fullTextQuery.dataset.active = '0';
+            fullTextQuery.dataset.value = '';
+            fullTextQuery.textContent = '';
+            fullTextQuery.style.display = "none";
+        }
+
+        bookSearch.dataset.selectedBook = bookSearch.dataset.selectedBook || '';
+
         // Show book list on focus
         bookSearch.addEventListener("focus", () => bookList.classList.remove("hidden"));
 
@@ -106,22 +126,33 @@
 
         // Filter books as you type
         bookSearch.addEventListener("input", function () {
-            const search = this.value.toLowerCase();
+            const rawValue = this.value;
+            const search = rawValue.toLowerCase();
+            const hasValue = rawValue.trim().length > 0;
+
             document.querySelectorAll("#bookList div").forEach(div => {
                 const shouldShow = div.textContent.toLowerCase().includes(search);
                 div.style.display = shouldShow ? "flex" : "none";
             });
-            // Change data value and text
-            fullTextQuery.textContent = search ? `Full text search for "${search}"` : "Full text search";
-            fullTextQuery.dataset.value = search;
-            fullTextQuery.style.display = search ? "flex" : "none";
+            // Store typed value for potential full text search
+            fullTextQuery.textContent = hasValue ? `Full text search for "${rawValue}"` : "";
+            fullTextQuery.dataset.value = rawValue.trim();
+            fullTextQuery.dataset.active = '0';
+            fullTextQuery.style.display = hasValue ? "flex" : "none";
+            this.dataset.selectedBook = '';
         });
 
         // Update URL with current filters
         function updateFilters() {
             const params = new URLSearchParams();
-            if (fullTextQuery.dataset.value) params.set('q', fullTextQuery.dataset.value);
-            else if (bookSearch.value) params.set('book', bookSearch.value);
+            const isFullText = fullTextQuery.dataset.active === '1' && fullTextQuery.dataset.value;
+            const selectedBook = bookSearch.dataset.selectedBook || '';
+
+            if (isFullText) {
+                params.set('q', fullTextQuery.dataset.value);
+            } else if (selectedBook) {
+                params.set('book', selectedBook);
+            }
             if (favToggle.querySelector('svg').getAttribute('fill') === 'currentColor') params.set('favorites', '1');
             if (sortToggle.classList.contains('active')) params.set('random', '1');
 
@@ -132,9 +163,52 @@
         bookList.addEventListener("click", function (e) {
             const bookDiv = e.target.closest('[data-value]');
             if (bookDiv) {
-                bookSearch.value = bookDiv.dataset.value;
+                bookList.classList.add("hidden");
+
+                if (bookDiv.id === 'fullTextQuery') {
+                    const queryValue = (fullTextQuery.dataset.value || bookSearch.value || '').trim();
+                    if (!queryValue) return;
+                    fullTextQuery.dataset.value = queryValue;
+                    fullTextQuery.dataset.active = '1';
+                    fullTextQuery.textContent = `Full text search for "${queryValue}"`;
+                    fullTextQuery.style.display = "flex";
+                    bookSearch.value = queryValue;
+                    bookSearch.dataset.selectedBook = '';
+                } else {
+                    const selectedValue = bookDiv.dataset.value || '';
+                    bookSearch.value = selectedValue;
+                    bookSearch.dataset.selectedBook = selectedValue;
+                    fullTextQuery.dataset.value = '';
+                    fullTextQuery.dataset.active = '0';
+                    fullTextQuery.textContent = '';
+                    fullTextQuery.style.display = "none";
+                }
+
                 updateFilters();
             }
+        });
+
+        // Trigger full text search on Enter key
+        bookSearch.addEventListener("keydown", function (e) {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+
+            const queryValue = (bookSearch.value || '').trim();
+            if (queryValue) {
+                fullTextQuery.dataset.value = queryValue;
+                fullTextQuery.dataset.active = '1';
+                fullTextQuery.textContent = `Full text search for "${queryValue}"`;
+                fullTextQuery.style.display = "flex";
+                bookSearch.dataset.selectedBook = '';
+            } else {
+                fullTextQuery.dataset.value = '';
+                fullTextQuery.dataset.active = '0';
+                fullTextQuery.textContent = '';
+                fullTextQuery.style.display = "none";
+            }
+
+            bookList.classList.add("hidden");
+            updateFilters();
         });
 
         // Toggle favorites and update
