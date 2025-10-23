@@ -3,7 +3,8 @@ import sqlite3
 from datetime import datetime, timedelta
 from contextlib import contextmanager
 
-DATABASE = 'main.db'
+DATABASE = "main.db"
+
 
 @contextmanager
 def get_db():
@@ -15,23 +16,29 @@ def get_db():
     finally:
         conn.close()
 
+
 def get_highlight_by_id(id):
     """Get highlight by ID"""
     with get_db() as conn:
-        return conn.execute(
-            "SELECT * FROM highlights WHERE id = ?",
-            (id,)
-        ).fetchone()
+        return conn.execute("SELECT * FROM highlights WHERE id = ?", (id,)).fetchone()
+
 
 def get_highlights_for_review():
     """Get highlights due for review today"""
     with get_db() as conn:
-        return conn.execute("SELECT * FROM highlights WHERE review_today = 1").fetchall()
+        return conn.execute(
+            "SELECT * FROM highlights WHERE review_today = 1"
+        ).fetchall()
 
-def get_all_highlights(book_filter=None, favorites_only=False, limit=None, shuffle=False, search_query=None):
+
+def get_all_highlights(
+    book_filter=None, favorites_only=False, limit=None, shuffle=False, search_query=None
+):
     """Get all non-deleted highlights with optional filtering and search"""
     if search_query:
-        return search_highlights(search_query, book_filter, favorites_only, limit, shuffle)
+        return search_highlights(
+            search_query, book_filter, favorites_only, limit, shuffle
+        )
 
     with get_db() as conn:
         query = "SELECT * FROM highlights WHERE deleted = 0"
@@ -41,7 +48,7 @@ def get_all_highlights(book_filter=None, favorites_only=False, limit=None, shuff
             params.append(book_filter)
         if favorites_only:
             query += " AND favorite = 1"
-        
+
         query += " ORDER BY " + ("RANDOM()" if shuffle else "timestamp DESC")
         if limit:
             query += " LIMIT ?"
@@ -49,7 +56,10 @@ def get_all_highlights(book_filter=None, favorites_only=False, limit=None, shuff
 
         return conn.execute(query, params).fetchall()
 
-def search_highlights(search_query, book_filter=None, favorites_only=False, limit=None, shuffle=False):
+
+def search_highlights(
+    search_query, book_filter=None, favorites_only=False, limit=None, shuffle=False
+):
     """Search highlights using FTS"""
     with get_db() as conn:
         query = """
@@ -83,57 +93,68 @@ def get_all_books():
             ORDER BY book_title
         """).fetchall()
 
+
 def exists_highlight(text):
     """Check if a passage already exists in the database using original_text"""
     with get_db() as conn:
-        result = conn.execute("SELECT id FROM highlights WHERE original_text = ? LIMIT 1", (text,)).fetchone()
+        result = conn.execute(
+            "SELECT id FROM highlights WHERE original_text = ? LIMIT 1", (text,)
+        ).fetchone()
         return result is not None
+
 
 def update_highlight(highlight_id, field, value):
     """Update a single field of a highlight"""
 
-    assert field in ['highlight_text', 'note', 'favorite', 'deleted']
-    if field in ['favorite', 'deleted']: assert value in [True, False] 
-    
+    assert field in ["highlight_text", "note", "favorite", "deleted"]
+    if field in ["favorite", "deleted"]:
+        assert value in [True, False]
+
     with get_db() as conn:
         conn.execute(
             "UPDATE highlights SET {} = ? WHERE id = ?".format(field),
-            (value, highlight_id)
+            (value, highlight_id),
         )
         conn.commit()
+
 
 def add_highlight(data):
     """Add a new highlight. `data` is dict with column names and values"""
 
-    assert 'highlight_text' in data and len(data['highlight_text']) > 5
+    assert "highlight_text" in data and len(data["highlight_text"]) > 5
 
     # Check if already exists
-    assert not exists_highlight(data['highlight_text']), 'Highlight already exists.'
+    assert not exists_highlight(data["highlight_text"]), "Highlight already exists."
 
     # Book title should be the current one (in case it was renamed)
-    data['book_title'] = book_current_name(data['book_title'])
+    data["book_title"] = book_current_name(data["book_title"])
 
     # Deal with 'original' columns
-    data['original_book_title'] = data.get('book_title', 'Unknown')
-    data['original_text'] = data['highlight_text']
+    data["original_book_title"] = data.get("book_title", "Unknown")
+    data["original_text"] = data["highlight_text"]
 
     with get_db() as conn:
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO highlights ({}) VALUES ({})
-        """.format(
-            ', '.join(data.keys()),
-            ', '.join(['?'] * len(data))
-        ), list(data.values()))
+        """.format(", ".join(data.keys()), ", ".join(["?"] * len(data))),
+            list(data.values()),
+        )
         conn.commit()
+
 
 def rename_book(old_book_str, new_book_str):
     """Rename a book title in the database"""
     old_book_str = book_current_name(old_book_str)
     with get_db() as conn:
-        conn.execute("""
+        conn.execute(
+            """
             UPDATE highlights SET book_title = ? WHERE book_title = ?
-        """, (new_book_str, old_book_str))
+        """,
+            (new_book_str, old_book_str),
+        )
         conn.commit()
+
 
 def update_book_author(book_str, new_author):
     """Update the author for all highlights in the given book"""
@@ -147,16 +168,21 @@ def update_book_author(book_str, new_author):
         )
         conn.commit()
 
+
 def delete_book(book_str):
     """Delete a book and all its highlights from the database"""
     book_str = book_current_name(book_str)
-    print('deleting book')
+    print("deleting book")
     print(book_str)
     with get_db() as conn:
-        conn.execute("""
+        conn.execute(
+            """
             UPDATE highlights SET deleted = 1 WHERE book_title = ?
-        """, (book_str,))
+        """,
+            (book_str,),
+        )
         conn.commit()
+
 
 def book_current_name(book_str):
     """Returns the current book_title of a potentially orginial_book_title"""
@@ -164,16 +190,17 @@ def book_current_name(book_str):
         # Check if it exists as an original title and return the current one
         result = conn.execute(
             "SELECT book_title FROM highlights WHERE original_book_title = ? LIMIT 1",
-            (book_str,)
+            (book_str,),
         ).fetchone()
 
-        return result['book_title'] if result else book_str
-        
-def get_highlight_stats():
+        return result["book_title"] if result else book_str
+
+
+def get_highlight_stats(n_recent_books=5):
     """Get various statistics about highlights collection"""
     with get_db() as conn:
         stats = {}
-        
+
         # Total counts
         basic_counts = conn.execute("""
         SELECT
@@ -185,7 +212,7 @@ def get_highlight_stats():
         FROM highlights
         """).fetchone()
         stats.update(dict(basic_counts))
-        
+
         # Review stats
         review_stats = conn.execute("""
         SELECT
@@ -195,9 +222,9 @@ def get_highlight_stats():
         FROM highlights
         """).fetchone()
         stats.update(dict(review_stats))
-        
+
         # Recently highlighted books (last 5)
-        stats['recent_books'] = conn.execute("""
+        stats["recent_books"] = conn.execute(f"""
         SELECT
             book_title,
             MAX(author) as author,
@@ -206,11 +233,11 @@ def get_highlight_stats():
         WHERE deleted = 0
         GROUP BY book_title
         ORDER BY last_highlight_date DESC
-        LIMIT 5
+        LIMIT {n_recent_books}
         """).fetchall()
-        
+
         # Monthly activity
-        stats['monthly_activity'] = conn.execute("""
+        stats["monthly_activity"] = conn.execute("""
         SELECT
             strftime('%Y-%m', timestamp) as month,
             COUNT(*) as new_highlights
@@ -218,5 +245,5 @@ def get_highlight_stats():
         GROUP BY month
         ORDER BY month DESC
         LIMIT 12
-        """).fetchall()        
+        """).fetchall()
         return stats
