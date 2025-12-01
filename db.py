@@ -3,6 +3,7 @@ import sqlite3
 from contextlib import contextmanager
 
 DATABASE = "main.db"
+DEFAULT_QUOTE_BOOK_TITLE = "Quotes"
 
 
 @contextmanager
@@ -26,7 +27,15 @@ def get_highlights_for_review():
     """Get highlights due for review today"""
     with get_db() as conn:
         return conn.execute(
-            "SELECT * FROM highlights WHERE review_today = 1"
+            """
+            SELECT * FROM highlights
+            WHERE review_today = 1
+            ORDER BY CASE WHEN book_title = ? THEN 0 ELSE 1 END,
+                     review_count ASC,
+                     last_review ASC,
+                     timestamp DESC
+            """,
+            (DEFAULT_QUOTE_BOOK_TITLE,),
         ).fetchall()
 
 
@@ -94,12 +103,21 @@ def get_all_books():
 
 
 def exists_highlight(text):
-    """Check if a passage already exists in the database using original_text"""
+    """Check if a passage already exists in the database (non-deleted) using original_text"""
     with get_db() as conn:
         result = conn.execute(
-            "SELECT id FROM highlights WHERE original_text = ? LIMIT 1", (text,)
+            "SELECT id FROM highlights WHERE original_text = ? AND deleted = 0 LIMIT 1",
+            (text,),
         ).fetchone()
         return result is not None
+
+
+def find_highlight_by_text(text):
+    """Return highlight (even if deleted) matching original_text"""
+    with get_db() as conn:
+        return conn.execute(
+            "SELECT * FROM highlights WHERE original_text = ? LIMIT 1", (text,)
+        ).fetchone()
 
 
 def update_highlight(highlight_id, field, value):
@@ -122,15 +140,49 @@ def add_highlight(data):
 
     assert "highlight_text" in data and len(data["highlight_text"]) > 5
 
-    # Check if already exists
-    assert not exists_highlight(data["highlight_text"]), "Highlight already exists."
+    highlight_text = data["highlight_text"]
+    book_title = (data.get("book_title") or "").strip() or "Unknown"
 
     # Book title should be the current one (in case it was renamed)
-    data["book_title"] = book_current_name(data["book_title"])
+    current_book_title = book_current_name(book_title)
+
+    existing_highlight = find_highlight_by_text(highlight_text)
+    if existing_highlight:
+        if existing_highlight["deleted"]:
+            with get_db() as conn:
+                conn.execute(
+                    """
+                    UPDATE highlights
+                    SET deleted = 0,
+                        book_title = ?,
+                        author = ?,
+                        note = ?,
+                        favorite = ?,
+                        highlight_text = ?,
+                        original_text = ?,
+                        timestamp = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                    """,
+                    (
+                        current_book_title,
+                        data.get("author"),
+                        data.get("note"),
+                        bool(data.get("favorite")),
+                        highlight_text,
+                        highlight_text,
+                        existing_highlight["id"],
+                    ),
+                )
+                conn.commit()
+            return
+
+        # Already exists and active
+        raise AssertionError("Highlight already exists.")
 
     # Deal with 'original' columns
-    data["original_book_title"] = data.get("book_title", "Unknown")
-    data["original_text"] = data["highlight_text"]
+    data["book_title"] = current_book_title
+    data["original_book_title"] = data.get("original_book_title") or data["book_title"]
+    data["original_text"] = highlight_text
 
     with get_db() as conn:
         conn.execute(

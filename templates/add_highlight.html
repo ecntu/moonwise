@@ -6,29 +6,52 @@
 {% block content %}
 <div class="max-w-2xl mx-auto">
     <form method="POST" class="bg-white p-6 rounded-lg shadow space-y-4">
+        <div class="space-y-2">
+            <span class="block text-sm font-medium text-gray-700">Save as</span>
+            <div class="flex flex-wrap gap-4">
+                <label class="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="radio" name="entry_type" value="book" class="text-blue-500"
+                        {% if entry_type != 'quote' %}checked{% endif %}>
+                    From a book
+                </label>
+                <label class="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="radio" name="entry_type" value="quote" class="text-blue-500"
+                        {% if entry_type == 'quote' %}checked{% endif %}>
+                    Standalone quote
+                </label>
+            </div>
+            <p class="text-xs text-gray-500">Standalone quotes are grouped under "{{ quote_default_title|default('Quotes') }}".</p>
+        </div>
+
         <div>
             <label class="block text-sm font-medium text-gray-700">Book Title</label>
             <input type="text" name="book_title" required
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                   value="{{ request.form.book_title or '' }}"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                   autocomplete="off">
+            <p id="quoteHint" class="text-xs text-gray-500 mt-1 hidden">
+                Stored under "{{ quote_default_title|default('Quotes') }}" when saving a standalone quote.
+            </p>
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700">Author (optional)</label>
+            <label class="block text-sm font-medium text-gray-700">Author / Source (optional)</label>
             <input type="text" name="author"
+                   value="{{ request.form.author or '' }}"
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Highlight Text</label>
             <textarea name="highlight_text" required rows="4"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ request.form.highlight_text or '' }}</textarea>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Note (optional)</label>
             <textarea name="note" rows="2"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ request.form.note or '' }}</textarea>
         </div>
         <div>
             <label class="flex items-center gap-2">
-                <input type="checkbox" name="favorite" class="rounded border-gray-300">
+                <input type="checkbox" name="favorite" class="rounded border-gray-300" {% if request.form.favorite %}checked{% endif %}>
                 <span class="text-sm font-medium text-gray-700">Mark as favorite</span>
             </label>
         </div>
@@ -42,4 +65,36 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const entryRadios = document.querySelectorAll('input[name="entry_type"]');
+        const bookInput = document.querySelector('input[name="book_title"]');
+        const quoteHint = document.getElementById("quoteHint");
+        const quoteDefaultTitle = {{ quote_default_title|default('Quotes')|tojson }};
+        let storedTitle = bookInput.value;
+
+        function syncEntryType() {
+            const isQuote = document.querySelector('input[name="entry_type"]:checked').value === "quote";
+
+            if (isQuote) {
+                if (!bookInput.readOnly) {
+                    storedTitle = bookInput.value;
+                }
+                bookInput.value = quoteDefaultTitle;
+                bookInput.readOnly = true;
+                bookInput.classList.add("bg-gray-100");
+                quoteHint.classList.remove("hidden");
+            } else {
+                bookInput.readOnly = false;
+                bookInput.classList.remove("bg-gray-100");
+                bookInput.value = storedTitle;
+                quoteHint.classList.add("hidden");
+            }
+        }
+
+        entryRadios.forEach(radio => radio.addEventListener("change", syncEntryType));
+        syncEntryType();
+    });
+</script>
 {% endblock %}

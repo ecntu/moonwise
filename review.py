@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from db import get_db
+from db import get_db, DEFAULT_QUOTE_BOOK_TITLE
 
 if __name__ == "__main__":
     N_REVIEW_PASSAGES = int(os.environ.get("N_REVIEW_PASSAGES", 5))
@@ -14,36 +14,66 @@ if __name__ == "__main__":
         conn.execute("""UPDATE highlights SET review_today = 0""")
         conn.commit()
 
-        # Select favorite highlights for review
-        conn.execute(
+        # Always pull one quote if available
+        quote_row = conn.execute(
             """
-            UPDATE highlights
-            SET review_today = 1, review_count = review_count + 1, last_review = date('now')
-            WHERE id IN (
-                SELECT id FROM highlights
-                WHERE deleted = 0 AND favorite = 1
-                ORDER BY review_count ASC, last_review ASC, RANDOM()
-                LIMIT ?
+            SELECT id FROM highlights
+            WHERE deleted = 0 AND book_title = ?
+            ORDER BY review_count ASC, last_review ASC, RANDOM()
+            LIMIT 1
+            """,
+            (DEFAULT_QUOTE_BOOK_TITLE,),
+        ).fetchone()
+
+        selected_quote = False
+        if quote_row:
+            selected_quote = True
+            conn.execute(
+                """
+                UPDATE highlights
+                SET review_today = 1, review_count = review_count + 1, last_review = date('now')
+                WHERE id = ?
+                """,
+                (quote_row["id"],),
             )
-        """,
-            (N_FAVORITES_IN_REVIEW,),
-        )
-        conn.commit()
+            conn.commit()
+
+        remaining_slots = max(N_REVIEW_PASSAGES - (1 if selected_quote else 0), 0)
+        favorite_limit = min(N_FAVORITES_IN_REVIEW, remaining_slots)
+        general_limit = max(remaining_slots - favorite_limit, 0)
+
+        # Select favorite highlights for review
+        if favorite_limit:
+            conn.execute(
+                """
+                UPDATE highlights
+                SET review_today = 1, review_count = review_count + 1, last_review = date('now')
+                WHERE id IN (
+                    SELECT id FROM highlights
+                    WHERE deleted = 0 AND favorite = 1 AND review_today = 0
+                    ORDER BY review_count ASC, last_review ASC, RANDOM()
+                    LIMIT ?
+                )
+            """,
+                (favorite_limit,),
+            )
+            conn.commit()
 
         # Select general highlights for review
-        conn.execute(
-            """
-            UPDATE highlights
-            SET review_today = 1, review_count = review_count + 1, last_review = date('now')
-            WHERE id IN (
-                SELECT id FROM highlights
-                WHERE deleted = 0 AND review_today = 0
-                ORDER BY review_count ASC, last_review ASC, RANDOM()
-                LIMIT ?
+        if general_limit:
+            conn.execute(
+                """
+                UPDATE highlights
+                SET review_today = 1, review_count = review_count + 1, last_review = date('now')
+                WHERE id IN (
+                    SELECT id FROM highlights
+                    WHERE deleted = 0 AND review_today = 0
+                    ORDER BY review_count ASC, last_review ASC, RANDOM()
+                    LIMIT ?
+                )
+            """,
+                (general_limit,),
             )
-        """,
-            (N_REVIEW_PASSAGES - N_FAVORITES_IN_REVIEW,),
-        )
-        conn.commit()
+            conn.commit()
 
     print(f"[{datetime.now()}] Review schedule updated.")

@@ -122,9 +122,18 @@ def review():
 @app.route("/add", methods=["GET", "POST"])
 def add_highlight():
     """Form to manually add a new highlight"""
+    quote_book_title = db.DEFAULT_QUOTE_BOOK_TITLE
+    entry_type = request.form.get("entry_type", "book")
+
     if request.method == "POST":
+        book_title = request.form.get("book_title", "").strip()
+        if entry_type == "quote":
+            book_title = quote_book_title
+        elif not book_title:
+            book_title = "Unknown"
+
         data = {
-            "book_title": request.form.get("book_title", "Unknown"),
+            "book_title": book_title,
             "highlight_text": request.form.get("highlight_text", ""),
             "author": request.form.get("author") or None,
             "note": request.form.get("note") or None,
@@ -136,7 +145,11 @@ def add_highlight():
             return redirect(url_for("index"))
         except Exception as e:
             flash(str(e))
-    return render_template("add_highlight.html")
+    return render_template(
+        "add_highlight.html",
+        quote_default_title=quote_book_title,
+        entry_type=entry_type,
+    )
 
 
 @app.route("/stats")
