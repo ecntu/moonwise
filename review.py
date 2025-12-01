@@ -50,12 +50,12 @@ if __name__ == "__main__":
                 SET review_today = 1, review_count = review_count + 1, last_review = date('now')
                 WHERE id IN (
                     SELECT id FROM highlights
-                    WHERE deleted = 0 AND favorite = 1 AND review_today = 0
+                    WHERE deleted = 0 AND favorite = 1 AND review_today = 0 AND book_title != ?
                     ORDER BY review_count ASC, last_review ASC, RANDOM()
                     LIMIT ?
                 )
             """,
-                (favorite_limit,),
+                (DEFAULT_QUOTE_BOOK_TITLE, favorite_limit),
             )
             conn.commit()
 
@@ -67,12 +67,12 @@ if __name__ == "__main__":
                 SET review_today = 1, review_count = review_count + 1, last_review = date('now')
                 WHERE id IN (
                     SELECT id FROM highlights
-                    WHERE deleted = 0 AND review_today = 0
+                    WHERE deleted = 0 AND review_today = 0 AND book_title != ?
                     ORDER BY review_count ASC, last_review ASC, RANDOM()
                     LIMIT ?
                 )
             """,
-                (general_limit,),
+                (DEFAULT_QUOTE_BOOK_TITLE, general_limit),
             )
             conn.commit()
 
