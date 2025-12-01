@@ -251,17 +251,21 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
     """Get various statistics about highlights collection"""
     with get_db() as conn:
         stats = {}
+        quote_book_title = DEFAULT_QUOTE_BOOK_TITLE
 
         # Total counts
-        basic_counts = conn.execute("""
+        basic_counts = conn.execute(
+            """
         SELECT
             COUNT(*) as total_highlights,
             SUM(CASE WHEN deleted = 0 THEN 1 ELSE 0 END) as active_highlights,
             SUM(CASE WHEN favorite = 1 AND deleted = 0 THEN 1 ELSE 0 END) as favorite_highlights,
-            COUNT(DISTINCT book_title) as total_books,
-            COUNT(DISTINCT CASE WHEN deleted = 0 THEN book_title ELSE NULL END) as active_books
+            COUNT(DISTINCT CASE WHEN book_title != ? THEN book_title ELSE NULL END) as total_books,
+            COUNT(DISTINCT CASE WHEN deleted = 0 AND book_title != ? THEN book_title ELSE NULL END) as active_books
         FROM highlights
-        """).fetchone()
+        """,
+            (quote_book_title, quote_book_title),
+        ).fetchone()
         stats.update(dict(basic_counts))
 
         # Review stats
@@ -281,11 +285,11 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
             MAX(author) as author,
             MAX(timestamp) as last_highlight_date
         FROM highlights
-        WHERE deleted = 0
+        WHERE deleted = 0 AND book_title != ?
         GROUP BY book_title
         ORDER BY last_highlight_date DESC
         LIMIT {n_recent_books}
-        """).fetchall()
+        """, (quote_book_title,)).fetchall()
 
         # Detailed recent books for recommender export
         stats["recent_books_detailed"] = conn.execute(
@@ -297,12 +301,12 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
             SUM(CASE WHEN favorite = 1 THEN 1 ELSE 0 END) as favorite_highlights,
             MAX(timestamp) as last_highlight_date
         FROM highlights
-        WHERE deleted = 0
+        WHERE deleted = 0 AND book_title != ?
         GROUP BY book_title
         ORDER BY last_highlight_date DESC
         LIMIT ?
         """,
-            (n_recent_books_detailed,),
+            (quote_book_title, n_recent_books_detailed),
         ).fetchall()
 
         # Top books by highlight volume
@@ -315,12 +319,12 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
             SUM(CASE WHEN favorite = 1 THEN 1 ELSE 0 END) as favorite_highlights,
             MAX(timestamp) as last_highlight_date
         FROM highlights
-        WHERE deleted = 0
+        WHERE deleted = 0 AND book_title != ?
         GROUP BY book_title
         ORDER BY total_highlights DESC, last_highlight_date DESC
         LIMIT ?
         """,
-            (n_top_books,),
+            (quote_book_title, n_top_books),
         ).fetchall()
 
         # Top books by favorite highlights
@@ -333,12 +337,12 @@ def get_highlight_stats(n_recent_books=5, n_recent_books_detailed=50, n_top_book
             SUM(CASE WHEN favorite = 1 THEN 1 ELSE 0 END) as favorite_highlights,
             MAX(timestamp) as last_highlight_date
         FROM highlights
-        WHERE deleted = 0
+        WHERE deleted = 0 AND book_title != ?
         GROUP BY book_title
         ORDER BY favorite_highlights DESC, total_highlights DESC, last_highlight_date DESC
         LIMIT ?
         """,
-            (n_top_books,),
+            (quote_book_title, n_top_books),
         ).fetchall()
 
         # Monthly activity
